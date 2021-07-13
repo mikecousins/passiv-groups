@@ -17,7 +17,7 @@ const ShadowBox = styled.div<Props>`
   padding: 20px 20px 20px;
   margin-bottom: 20px;
   @media (max-width: 900px) {
-    padding: 15px;
+    padding: 10px;
   }
   ${dynamicColor};
 `;

@@ -107,6 +107,15 @@ export const selectSettings = createSelector(
   },
 );
 
+export const selectOnboardingStep = createSelector(
+  selectSettings,
+  (settings) => {
+    if (settings) {
+      return settings.onboarding_status;
+    }
+  },
+);
+
 export const selectIsAffiliate = createSelector(selectSettings, (settings) => {
   if (settings) {
     return settings.is_affiliate;

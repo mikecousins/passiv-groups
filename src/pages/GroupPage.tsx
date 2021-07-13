@@ -8,6 +8,7 @@ import AccountTab from '../components/AccountTab';
 import GroupSettingsTab from '../components/GroupSettingsTab';
 import styled from '@emotion/styled';
 import { selectPathname } from '../selectors/router';
+import WelcomePage from './WelcomePage';
 
 export const SubNav = styled.div`
   border-bottom: 1px solid #e5e5e5;
@@ -67,6 +68,7 @@ const GroupPage = () => {
 
   return (
     <React.Fragment>
+      <WelcomePage />
       <SubNav>
         <NavContainer>
           <Link

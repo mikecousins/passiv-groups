@@ -42,16 +42,6 @@ export const TargetContainer = styled.div`
   min-height: 200px;
 `;
 
-export const Container2Column = styled.div`
-  @media (min-width: 900px) {
-    display: flex;
-    justify-content: space-between;
-    > div {
-      width: 49%;
-    }
-  }
-`;
-
 const H3LowProfile = styled(H3)`
   line-height: 1.3em;
   height: 3em;

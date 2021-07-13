@@ -5,49 +5,27 @@ export const InputContainer = styled.div`
   font-size: 18px;
 `;
 
-export const Brokerage = styled.div`
-  min-width: 15%;
-`;
+export const Brokerage = styled.div``;
 
-export const BrokerageTitle = styled.div`
-  font-size: 20px;
-  font-weight: 500;
-`;
+export const BrokerageTitle = styled.div``;
 
-export const Name = styled.div`
-  min-width: 20%;
-  display: flex;
-`;
+export const Name = styled.div``;
 
-export const Number = styled.div`
-  min-width: 10%;
-  text-align: center;
-  display: flex;
-`;
+export const Number = styled.div``;
 
-export const Type = styled.div`
-  min-width: 10%;
-  text-align: center;
-  display: flex;
-`;
+export const Type = styled.div``;
 
-export const PortfolioGroup = styled.div`
-  min-width: 30%;
-  text-align: center;
-`;
+export const PortfolioGroup = styled.div``;
 
 export const AccountContainer = styled.div`
   border-top: 1px solid #eee;
   margin-top: 10px;
   padding-top: 10px;
-  &:first-of-type {
-    border: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
+
   p {
-    margin-top: 5px;
-    margin-left: 5px;
-    font-size: 16px;
+    font-size: 22px;
+  }
+  svg {
+    font-size: 24px;
   }
 `;

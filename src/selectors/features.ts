@@ -56,8 +56,8 @@ export const selectSMS2FAFeature = createFeatureSelector('sms_2fa');
 
 export const selectOTP2FAFeature = createFeatureSelector('otp_2fa');
 
-export const selectShowProgressFeature = createFeatureSelector(
-  'onboarding_progress',
+export const selectNewOnboardingFeature = createFeatureSelector(
+  'new-onboarding',
 );
 
 export const selectLimitOrdersFeature = createFeatureSelector('limit_orders');

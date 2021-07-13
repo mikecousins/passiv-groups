@@ -5,6 +5,7 @@ import MenuButton from './MenuButton';
 import Menu from './Menu';
 import { selectIsMobile } from '../../selectors/browser';
 import { selectPathname } from '../../selectors/router';
+import { selectOnboardingStep } from '../../selectors';
 
 const StyledSlideMenu = styled.div`
   position: relative;
@@ -17,19 +18,28 @@ const StyledSlideMenu = styled.div`
 export const SlideMenu = () => {
   const isMobile = useSelector(selectIsMobile);
   const pathname = useSelector(selectPathname);
+  const onboardingStep = useSelector(selectOnboardingStep);
   const [visible, setVisible] = useState(!isMobile);
   const [oldPath, setPath] = useState(pathname);
 
   useEffect(() => {
     if (!isMobile) {
       // hide side bar if user is on the onboarding process
-      if (pathname.includes('shared-model-portfolio')) {
+      if (
+        ((pathname === '/welcome' ||
+          pathname === '/connect/open' ||
+          pathname.includes('oauth') ||
+          pathname === '/questrade-offer') &&
+          onboardingStep !== undefined &&
+          onboardingStep <= 4) ||
+        pathname.includes('shared-model-portfolio')
+      ) {
         setVisible(false);
       } else {
         setVisible(true);
       }
     }
-  }, [pathname, isMobile]);
+  }, [pathname, onboardingStep, isMobile]);
 
   if (pathname === '/quick-trade') {
     return <></>;

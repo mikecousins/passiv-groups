@@ -6,6 +6,11 @@ import Connections from './../Connections';
 import { Button } from '../../styled/Button';
 import ShadowBox from '../../styled/ShadowBox';
 import { H2 } from '../../styled/GlobalElements';
+import styled from '@emotion/styled';
+
+const ButtonContainer = styled.div`
+  margin-top: 20px;
+`;
 
 const ConnectionsManager = () => {
   const authorizations = useSelector(selectAuthorizations);
@@ -16,7 +21,7 @@ const ConnectionsManager = () => {
     <ShadowBox className="tour-edit-connections">
       <H2>Connections</H2>
       <Connections />
-      <div>
+      <ButtonContainer>
         <Button
           onClick={() => {
             dispatch(push('/settings/connect'));
@@ -28,7 +33,7 @@ const ConnectionsManager = () => {
             ? 'Add Another Connection'
             : 'Add a Connection'}
         </Button>
-      </div>
+      </ButtonContainer>
     </ShadowBox>
   );
 };

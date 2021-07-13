@@ -16,6 +16,7 @@ const SetupPrompt = () => {
   return (
     <React.Fragment>
       <ShadowBox background="#DBFCF6">
+        <HideButton name={'setup_prompt'} xButton={true} />
         <H1>Setup Portfolios</H1>
         <StyledP>
           Now it's time to set targets for your portfolios. Here's how:
@@ -44,7 +45,6 @@ const SetupPrompt = () => {
           If you want to make Passiv ignore one of your accounts, go to{' '}
           <Link to="/settings">Settings</Link>, scroll down to Accounts, and
           move the account to the Hidden Account section.
-          <HideButton name={'setup_prompt'} />
         </P>
       </ShadowBox>
     </React.Fragment>

@@ -1,27 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import styled from '@emotion/styled';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import {
+  faExclamationTriangle,
+  faLongArrowAltRight,
+  faSpinner,
+} from '@fortawesome/free-solid-svg-icons';
 import { push } from 'connected-react-router';
-import { postData } from '../api';
-import { reloadEverything } from '../actions';
+import { postData, putData } from '../api';
+import { loadAuthorizations, reloadEverything } from '../actions';
 import ShadowBox from '../styled/ShadowBox';
-import { A, H1, H2, P } from '../styled/GlobalElements';
+import { A, H1, H2, H3, P } from '../styled/GlobalElements';
 import { Button } from '../styled/Button';
-import { Step } from '../styled/SignupSteps';
 import { selectQueryTokens } from '../selectors/router';
 import { Error } from '../types/groupInfo';
 import PreLoadLink from '../components/PreLoadLink';
 import { CONTACT_FORM_PATH } from '../apps/Paths';
-import { selectBrokerages, selectMaintenanceBrokerages } from '../selectors';
+import {
+  selectBrokerages,
+  selectMaintenanceBrokerages,
+  selectOnboardingStep,
+  selectSettings,
+} from '../selectors';
 import { selectIsPaid } from '../selectors/subscription';
-import { selectQuestradeOfferFeature } from '../selectors/features';
 import { Brokerage as BrokerageType } from '../types/brokerage';
 import { toast } from 'react-toastify';
-import styled from '@emotion/styled';
+import { Description } from '../components/Onboarding /Intro';
+import Grid from '../styled/Grid';
+import { Authorization } from '../types/authorization';
+import { selectAccounts } from '../selectors/accounts';
+import { selectGroupsLoading } from '../selectors/groups';
 
-const H2Padded = styled(H2)`
-  padding-bottom: 20px;
+import goldStar from '../assets/images/gold-star.png';
+import OnboardingProgress from '../components/Onboarding /OnboardingProgress';
+import { updateOnboardingStep } from '../actions/onboarding';
+import NameInputAndEdit from '../components/NameInputAndEdit';
+
+const ActionContainer = styled.div`
+  margin-top: 44px;
+  @media (max-width: 900px) {
+    button {
+      margin: 10px auto;
+    }
+  }
+`;
+
+export const Star = styled.div`
+  background: url(${goldStar}) no-repeat;
+  background-size: contain;
+  width: 75px;
+  height: 75px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  transform: rotate(18deg);
+  @media (max-width: 900px) {
+    width: 60px;
+    height: 60px;
+  }
+`;
+
+export const Continue = styled(Button)`
+  svg {
+    margin-left: 10px;
+  }
+`;
+
+export const ConnectMore = styled(Button)`
+  background-color: var(--brand-green);
+  margin-right: 35px;
+`;
+
+export const Container = styled(ShadowBox)`
+  background-color: var(--brand-light-green);
+  padding: 50px;
+  * {
+    text-align: center;
+  }
+`;
+
+export const ExclamationIcon = styled.div`
+  font-size: 75px;
+`;
+
+const NewConnectionContainer = styled(ShadowBox)`
+  margin-top: 20px;
+  padding: 50px;
+`;
+
+const NewConnection = styled(Grid)`
+  margin-top: 35px;
+  * {
+    text-align: left;
+  }
+`;
+
+const NewConnectionDetails = styled.div`
+  margin-bottom: 20px;
+  h3 {
+    font-size: 22px;
+    line-height: 29px;
+    letter-spacing: 0.2px;
+    span {
+      font-weight: 400;
+    }
+  }
+`;
+
+const EditNameContainer = styled.div`
+  button {
+    font-size: 18px;
+    margin: 0 5px;
+    min-width: 70px;
+    @media (min-width: 900px) {
+      top: 0;
+    }
+  }
 `;
 
 type Props = {
@@ -29,18 +123,30 @@ type Props = {
 };
 
 const BrokeragesOauthPage = ({ brokerageName }: Props) => {
+  const dispatch = useDispatch();
+  const queryParams = useSelector(selectQueryTokens);
+  const isPaid = useSelector(selectIsPaid);
+  const onboardingStep = useSelector(selectOnboardingStep);
+  const brokerages = useSelector(selectBrokerages);
+  const maintenanceBrokerages = useSelector(selectMaintenanceBrokerages);
+  const accounts = useSelector(selectAccounts);
+  const groupLoading = useSelector(selectGroupsLoading);
+  const settings = useSelector(selectSettings);
+
   const [loading, setLoading] = useState(false);
   const [showUpgradeOffer, setShowUpgradeOffer] = useState(false);
   const [error, setError] = useState<Error>();
-  const queryParams = useSelector(selectQueryTokens);
-  const isPaid = useSelector(selectIsPaid);
-  const questradeOfferFeatureActive = useSelector(selectQuestradeOfferFeature);
-  const dispatch = useDispatch();
-  const brokerages = useSelector(selectBrokerages);
-  const maintenanceBrokerages = useSelector(selectMaintenanceBrokerages);
   const [token, setToken] = useState<any>(null);
   const [tokenConfirmed, setTokenConfirmed] = useState<boolean>(false);
   const [requestStarted, setRequestStarted] = useState<boolean>(false);
+  const [connectedSuccessfully, setConnectedSuccessfully] = useState(false);
+  const [newConnectionDetails, setNewConnectionDetails] = useState<
+    Authorization
+  >();
+  const [connectionName, setConnectionName] = useState('');
+  const [editingConnectionName, setEditingConnectionName] = useState(false);
+
+  const isOnboarding = onboardingStep && onboardingStep <= 3;
 
   if (tokenConfirmed === false) {
     if (
@@ -71,6 +177,11 @@ const BrokeragesOauthPage = ({ brokerageName }: Props) => {
       }
     });
   }
+  useEffect(() => {
+    if (newConnectionDetails) {
+      setConnectionName(newConnectionDetails.name);
+    }
+  }, [newConnectionDetails]);
 
   useEffect(() => {
     if (
@@ -82,30 +193,17 @@ const BrokeragesOauthPage = ({ brokerageName }: Props) => {
       setRequestStarted(true);
       setLoading(true);
       postData('/api/v1/brokerages/authComplete/', token)
-        .then(() => {
+        .then((res) => {
+          setNewConnectionDetails(res.data);
+          setLoading(false);
           dispatch(reloadEverything());
-          if (brokerageName === 'Questrade') {
-            if (isPaid || !questradeOfferFeatureActive) {
-              setTimeout(() => {
-                dispatch(push('/'));
-              }, 1000);
-            } else {
-              setLoading(false);
-              setShowUpgradeOffer(true);
-            }
-          } else {
-            dispatch(push('/'));
-            setTimeout(() => {
-              if (brokerageName === 'Interactive Brokers') {
-                setLoading(false);
-              }
-            }, 1000);
+          setConnectedSuccessfully(true);
+          if (brokerageName === 'Questrade' && !isPaid) {
+            setShowUpgradeOffer(true);
           }
         })
         .catch((error) => {
-          setTimeout(() => {
-            setLoading(false);
-          }, 1000);
+          setLoading(false);
           setError(error.response.data);
         });
     }
@@ -289,81 +387,205 @@ const BrokeragesOauthPage = ({ brokerageName }: Props) => {
         break;
     }
   }
-
   let result = null;
-  if (loading === true) {
+
+  if (loading) {
     result = (
-      <React.Fragment>
-        <Step>
-          Establishing connection to {brokerageName}...{' '}
-          <FontAwesomeIcon icon={faSpinner} spin />
-        </Step>
-      </React.Fragment>
+      <H1>
+        Establishing connection to {brokerageName}...{' '}
+        <FontAwesomeIcon icon={faSpinner} spin />
+      </H1>
     );
-  } else {
-    if (brokerageName === 'Questrade' && showUpgradeOffer) {
+  } else if (connectedSuccessfully || overrideError) {
+    if (showUpgradeOffer) {
       result = (
-        <React.Fragment>
-          <Step>Questrade connection established.</Step>
-          <ShadowBox>
-            <H2Padded>
-              You're eligible for a <strong>free</strong> upgrade to Passiv
-              Elite!
-            </H2Padded>
-            <P>
-              <A
-                href="https://www.questrade.com/self-directed-investing/tools/partners/passiv"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Questrade
-              </A>{' '}
-              offers Passiv Elite as a free tool for Questrade customers. It's
-              available for free as long as you keep your Questrade account
-              connected to Passiv.
-            </P>
-            <P>
-              You’ll get access to all basic features plus the option to{' '}
-              <A
-                href="https://passiv.com/help/tutorials/how-to-use-one-click-trades/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                place orders through Passiv
-              </A>{' '}
-              in just one click.
-            </P>
-            <Button onClick={() => dispatch(push('/questrade-offer'))}>
-              Upgrade Now
-            </Button>
-          </ShadowBox>
-        </React.Fragment>
-      );
-    } else {
-      result = (
-        <React.Fragment>
-          {brokerageName === 'Interactive Brokers' && overrideError ? (
-            <Step>Connection successful</Step>
-          ) : (
-            <React.Fragment>
-              <Step>Failed to establish connection :(</Step>
-              <ShadowBox>
-                {errorDisplay}
-                <Button onClick={() => dispatch(push('/settings'))}>
-                  Go to Settings
-                </Button>
-              </ShadowBox>
-            </React.Fragment>
-          )}
-        </React.Fragment>
+        <div>
+          <Star></Star>
+          <P>
+            Congratulations!! You are eligible for a <strong>FREE</strong>{' '}
+            upgrade to Passiv Elite with your Questrade account!
+          </P>
+          <P>
+            <A
+              href="https://www.questrade.com/self-directed-investing/tools/partners/passiv"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Questrade
+            </A>{' '}
+            offers Passiv Elite as a free tool for Questrade customers. It's
+            available for free as long as you keep your Questrade account
+            connected to Passiv.
+          </P>
+          <P>
+            You’ll get access to all basic features plus the option to{' '}
+            <A
+              href="https://passiv.com/help/tutorials/how-to-use-one-click-trades/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              place orders through Passiv
+            </A>{' '}
+            in just one click.
+          </P>
+          <Button onClick={() => dispatch(push('/questrade-offer'))}>
+            Upgrade Now
+          </Button>
+        </div>
       );
     }
+
+    const saveConnectionName = () => {
+      if (
+        newConnectionDetails &&
+        newConnectionDetails?.name !== connectionName
+      ) {
+        let newAuthorization = Object.assign({}, newConnectionDetails);
+        newAuthorization.name = connectionName;
+        putData(
+          `/api/v1/authorizations/${newConnectionDetails.id}`,
+          newAuthorization,
+        )
+          .then(() => {
+            dispatch(loadAuthorizations());
+          })
+          .catch(() => {
+            dispatch(loadAuthorizations());
+          });
+      }
+      setEditingConnectionName(false);
+    };
+
+    result = (
+      <>
+        <Star></Star>
+        <H1>Connection Complete</H1>
+        <Description>
+          Thanks for connecting your {brokerageName} account! Connect another
+          brokerage or move on to the next step!
+        </Description>
+        {newConnectionDetails && (
+          <NewConnectionContainer>
+            {groupLoading ? (
+              <H2>
+                Loading new connection details{' '}
+                <FontAwesomeIcon icon={faSpinner} spin />
+              </H2>
+            ) : (
+              <>
+                <H2>Your New Connection Details</H2>
+                <NewConnection columns="1fr 1fr">
+                  <div>
+                    <NewConnectionDetails>
+                      <H3>
+                        Brokerage: <span>{brokerageName}</span>
+                      </H3>
+                    </NewConnectionDetails>
+                    <NewConnectionDetails>
+                      <H3>
+                        Name:
+                        <NameInputAndEdit
+                          value={connectionName}
+                          edit={editingConnectionName}
+                          allowEdit={true}
+                          onChange={(e: any) =>
+                            setConnectionName(e.target.value)
+                          }
+                          onClickDone={saveConnectionName}
+                          onClickEdit={() => setEditingConnectionName(true)}
+                          onClickCancel={() => {
+                            setConnectionName(newConnectionDetails.name);
+                            setEditingConnectionName(false);
+                          }}
+                          cancelButton={true}
+                          StyledContainer={EditNameContainer}
+                        />
+                      </H3>
+                    </NewConnectionDetails>
+                    <NewConnectionDetails>
+                      <H3>
+                        Status: <span>{newConnectionDetails.type}</span>
+                      </H3>
+                    </NewConnectionDetails>
+                  </div>
+                  <div>
+                    <NewConnectionDetails>
+                      <H3>Accounts: </H3>
+                    </NewConnectionDetails>
+                    <ul>
+                      {accounts
+                        .filter(
+                          (a) =>
+                            a.brokerage_authorization ===
+                            newConnectionDetails.id,
+                        )
+                        .map((account) => (
+                          <P key={account.id}>
+                            {account.name} ({account.number})
+                          </P>
+                        ))}
+                    </ul>
+                  </div>
+                </NewConnection>
+              </>
+            )}
+          </NewConnectionContainer>
+        )}
+
+        <ActionContainer>
+          {isOnboarding ? (
+            <>
+              <ConnectMore
+                onClick={() => dispatch(updateOnboardingStep(1, settings))}
+              >
+                Connect Another Account
+              </ConnectMore>
+              <Continue
+                onClick={() => {
+                  dispatch(push('/welcome'));
+                  dispatch(updateOnboardingStep(2, settings));
+                }}
+              >
+                Continue to Next Step
+                <FontAwesomeIcon icon={faLongArrowAltRight} size="lg" />
+              </Continue>
+            </>
+          ) : (
+            <ConnectMore onClick={() => dispatch(push('/welcome'))}>
+              Connect Another Account
+            </ConnectMore>
+          )}
+        </ActionContainer>
+      </>
+    );
+  } else if (error && !overrideError) {
+    result = (
+      <React.Fragment>
+        <ExclamationIcon>
+          <FontAwesomeIcon icon={faExclamationTriangle} color="orange" />
+        </ExclamationIcon>
+        <H1>Failed to establish a connection</H1>
+        {errorDisplay}
+        <ActionContainer>
+          {isOnboarding ? (
+            <Continue onClick={() => dispatch(push('/welcome'))}>
+              Go Back
+            </Continue>
+          ) : (
+            <Continue onClick={() => dispatch(push('/settings'))}>
+              Go to Settings
+            </Continue>
+          )}
+        </ActionContainer>
+      </React.Fragment>
+    );
   }
+
   return (
-    <ShadowBox background="#04a287">
-      <H1 color="white">SETUP</H1>
+    <Container>
+      {isOnboarding && <OnboardingProgress currentStep={1} />}
       {result}
-    </ShadowBox>
+    </Container>
   );
 };
 

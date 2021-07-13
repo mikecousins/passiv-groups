@@ -6,26 +6,24 @@ import { loadAccounts, loadGroups } from '../../actions';
 import { putData } from '../../api';
 import { Table, H3, P, A } from '../../styled/GlobalElements';
 import { Button } from '../../styled/Button';
-import {
-  AccountContainer,
-  Brokerage,
-  BrokerageTitle,
-  Name,
-  Number,
-  Type,
-} from './styles';
+import { AccountContainer, Brokerage, Name, Number, Type } from './styles';
 import { Account } from '../../types/account';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
+import { selectIsMobile } from '../../selectors/browser';
 
 type Props = {
   account: Account;
+  editing: boolean;
 };
 
-export const AccountRow = ({ account }: Props) => {
+export const AccountRow = ({ account, editing }: Props) => {
   const [groupEditing, setGroupEditing] = useState(false);
   const [newGroupId, setNewGroupId] = useState('');
   const brokerages = useSelector(selectAllBrokerages);
   const authorizations = useSelector(selectAuthorizations);
   const groups = useSelector(selectGroups);
+  const onMobile = useSelector(selectIsMobile);
   const dispatch = useDispatch();
 
   if (!groups) {
@@ -100,9 +98,15 @@ export const AccountRow = ({ account }: Props) => {
 
   return (
     <AccountContainer>
+      {editing && onMobile && (
+        <div style={{ float: 'right' }}>
+          <FontAwesomeIcon icon={faGripVertical} size="lg" />
+        </div>
+      )}
       <Table>
         <Brokerage>
-          <BrokerageTitle>{brokerageName}</BrokerageTitle>
+          <H3>Brokerage</H3>
+          <P>{brokerageName}</P>
         </Brokerage>
         <Name>
           <H3>Name</H3>
@@ -121,6 +125,7 @@ export const AccountRow = ({ account }: Props) => {
           <H3>Type</H3>
           <P> {formatAccountType(account, brokerageName)} </P>
         </Type>
+        {editing && !onMobile && <FontAwesomeIcon icon={faGripVertical} />}
       </Table>
       {groupEditing && editingFooter}
     </AccountContainer>

@@ -1,17 +1,21 @@
-import { useSelector, useDispatch } from 'react-redux';
 import React, { useState } from 'react';
-import { replace } from 'connected-react-router';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useSelector, useDispatch } from 'react-redux';
+import { push, replace } from 'connected-react-router';
+import {
+  faLongArrowAltLeft,
+  faLongArrowAltRight,
+  faSpinner,
+  faStar,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   selectIsAuthorized,
   selectBrokerages,
   selectMaintenanceBrokerages,
+  selectSettings,
 } from '../selectors';
-
 import { useParams } from 'react-router';
-import { Link } from 'react-router-dom';
-import { A, P, BulletUL, Li } from '../styled/GlobalElements';
+import { A, P, BulletUL, Li, H1, H2 } from '../styled/GlobalElements';
 import { postData } from '../api';
 import ShadowBox from '../styled/ShadowBox';
 import styled from '@emotion/styled';
@@ -29,38 +33,206 @@ import ZerodhaLogo from '../assets/images/zerodha-logo.png';
 import { Brokerage as BrokerageType } from '../types/brokerage';
 import { toast } from 'react-toastify';
 import { Button } from '../styled/Button';
-
-import {
-  aDarkStyle,
-  Container2Column,
-  Container1Column,
-  GrowBox,
-  LogoContainer,
-  LinkContainer,
-  AuthBox,
-  OpenBox,
-  AuthLink,
-  AuthP,
-  H1DarkStyle,
-  H2DarkStyle,
-  VerticalPadding,
-} from '../styled/Setup';
-import OnboardingProgress from '../components/OnboardingProgress';
-import { selectShowProgressFeature } from '../selectors/features';
 import { CONTACT_FORM_PATH } from '../apps/Paths';
 import PreLoadLink from '../components/PreLoadLink';
+import { Description } from '../components/Onboarding /Intro';
+import Grid from '../styled/Grid';
+import { Continue } from './BrokeragesOauthPage';
+import OnboardingProgress from '../components/Onboarding /OnboardingProgress';
+import { updateOnboardingStep } from '../actions/onboarding';
 
-const Brokerage = styled.div``;
+const VerticalPadding = styled.div`
+  padding-top: 10px;
+  padding-bottom: 10px;
+`;
+
+const Container3Column = styled(Grid)`
+  @media (max-width: 900px) {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 20px;
+  }
+`;
+
+const GrowBox = styled.div`
+  margin: 50px 0px;
+  height: 150px;
+`;
+
+const BiggerLogoContainer = styled.div`
+  padding: 20px;
+  max-height: 100px;
+  img {
+    max-width: 100%;
+    max-height: 100px;
+  }
+  @media (max-width: 900px) {
+    max-height: 200px;
+  }
+`;
+
+export const LogoContainer = styled.div`
+  padding: 30px;
+  img {
+    max-width: 100%;
+  }
+`;
+
+const LinkContainer = styled.div`
+  margin-top: 20px;
+  margin-bottom: 10px;
+`;
+
+const AuthBox = styled(ShadowBox)`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 30px;
+  cursor: pointer;
+`;
+
+const OpenBox = styled(ShadowBox)`
+  min-width: 400px;
+  text-align: center;
+  padding-bottom: 30px;
+  height: 100%;
+  @media (max-width: 900px) {
+    min-width: 100%;
+  }
+`;
+
+const AuthLink = styled(A)`
+  font-weight: bold;
+  font-size: 18px;
+  letter-spacing: 0;
+`;
+
+const AuthP = styled(P)`
+  max-width: 715px;
+  margin: 50px 0px 25px 0px;
+`;
+
+export const H1DarkStyle = styled(H1)`
+  color: #fff;
+`;
+
+export const H2DarkStyle = styled(H2)`
+  color: #04a287;
+  font-size: 22px;
+  padding-bottom: 20px;
+`;
+
+export const PDarkStyle = styled(P)`
+  color: #04a287;
+  font-size: 18px;
+  padding-bottom: 10px;
+
+  &:last-of-type {
+    padding-bottom: 0;
+  }
+`;
+
+const Note = styled(P)`
+  font-size: 16px;
+  line-height: 150%;
+  letter-spacing: 0.2px;
+  span {
+    font-weight: 600;
+  }
+`;
+
+const Brokerage = styled(H2)`
+  margin: 40px 0px 20px 0px;
+`;
+
+export const BackBtn = styled(Button)`
+  background-color: var(--brand-green);
+  svg {
+    margin-right: 5px;
+  }
+`;
+
+const BrokerageOptions = styled(Grid)`
+  grid-auto-flow: row;
+  overflow: hidden;
+`;
+
+const OpenAccountBtn = styled(Button)`
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 26px;
+  text-align: center;
+  letter-spacing: 0.25px;
+  @media (max-width: 900px) {
+    margin-top: 30px;
+  }
+`;
+
+type RibbonType = {
+  teamPick: boolean;
+};
+
+const Ribbon = styled.div<RibbonType>`
+  width: 50px;
+  height: 70px;
+  background-color: ${(props) =>
+    props.teamPick ? '#fdbc00' : 'var(--brand-green)'};
+  position: absolute;
+  text-align: center;
+  margin-left: 10px;
+  padding: 5px;
+  p {
+    font-size: 12px;
+    line-height: 15px;
+    text-align: center;
+    letter-spacing: 0.2px;
+    font-weight: 600;
+  }
+  svg {
+    font-size: 15px;
+    margin-bottom: 5px;
+  }
+  &:before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    right: 0px;
+    bottom: -15px;
+    border-left: 24px solid
+      ${(props) => (props.teamPick ? '#fdbc00' : 'var(--brand-green)')};
+    border-right: 26px solid
+      ${(props) => (props.teamPick ? '#fdbc00' : 'var(--brand-green)')};
+    border-bottom: 15px solid transparent;
+    border-bottom-color: transparent;
+    border-bottom-style: solid;
+    border-bottom-width: 15px;
+  }
+  &:after {
+    content: '';
+    width: 50px;
+    height: 55px;
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    bottom: -120px;
+    background-color: white;
+  }
+`;
+
+const NextStep = styled.span`
+  float: right;
+`;
 
 type Props = {
   onboarding?: boolean;
 };
 
-const AuthorizationPage = ({ onboarding }: Props) => {
+const ConnectBrokerage = ({ onboarding }: Props) => {
   const authorized = useSelector(selectIsAuthorized);
   const brokerages = useSelector(selectBrokerages);
+  const settings = useSelector(selectSettings);
   const maintenanceBrokerages = useSelector(selectMaintenanceBrokerages);
-  const showProgressFeature = useSelector(selectShowProgressFeature);
   const { openBrokerage } = useParams();
   const dispatch = useDispatch();
   const [confirmConnection, setConfirmConnection] = useState('');
@@ -159,6 +331,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
+      teamPick: true,
     },
     {
       id: 'alpaca',
@@ -179,6 +352,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
+      teamPick: false,
     },
     {
       id: 'allyinvest',
@@ -273,6 +447,23 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
+      teamPick: false,
+    },
+    {
+      id: 'bitbuy',
+      name: 'Bitbuy',
+      displayName: 'Bitbuy',
+      connect: () => {
+        startConnection('Bitbuy', 'trade');
+      },
+      confirmPrompt: null,
+      defaultConnectionType: 'trade',
+      openURL: 'https://bitbuy.ca/en/getstarted',
+      major: true,
+      logo: BitbuyLogo,
+      description: <P>Bitbuy is a Canadian cryptocurrency exchange.</P>,
+      type: 'crypto',
+      teamPick: false,
     },
     {
       id: 'tdameritrade',
@@ -293,6 +484,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
+      teamPick: false,
     },
     {
       id: 'tradier',
@@ -313,7 +505,9 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
+      teamPick: false,
     },
+
     {
       id: 'kraken',
       name: 'Kraken',
@@ -321,7 +515,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
       connect: () => {
         startConnection('Kraken', 'trade');
       },
-      openURL: 'https://passiv.com/connect/kraken',
+      openURL: 'https://www.kraken.com/sign-up',
       major: true,
       logo: KrakenLogo,
       defaultConnectionType: 'trade',
@@ -333,6 +527,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'crypto',
+      teamPick: false,
     },
     {
       id: 'unocoin',
@@ -341,7 +536,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
       connect: () => {
         startConnection('Unocoin', 'trade');
       },
-      openURL: 'https://passiv.com/connect/unocoin',
+      openURL: 'https://www.unocoin.com/in',
       major: true,
       logo: UnocoinLogo,
       defaultConnectionType: 'trade',
@@ -354,6 +549,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'crypto',
+      teamPick: false,
     },
     {
       id: 'wealthica',
@@ -414,6 +610,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'aggregator',
+      teamPick: false,
     },
     {
       id: 'zerodha',
@@ -424,7 +621,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
       },
       confirmPrompt: null,
       defaultConnectionType: 'trade',
-      openURL: 'https://kite.trade/connect/login?api_key=pnriechdkzx5ipvq&v=3',
+      openURL: 'https://zerodha.com/open-account/',
       major: true,
       logo: ZerodhaLogo,
       description: (
@@ -434,21 +631,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
         </P>
       ),
       type: 'traditional',
-    },
-    {
-      id: 'bitbuy',
-      name: 'Bitbuy',
-      displayName: 'Bitbuy',
-      connect: () => {
-        startConnection('Bitbuy', 'trade');
-      },
-      confirmPrompt: null,
-      defaultConnectionType: 'trade',
-      openURL: '',
-      major: true,
-      logo: BitbuyLogo,
-      description: <P>Bitbuy is a Canadian cryptocurrency exchange.</P>,
-      type: 'crypto',
+      teamPick: false,
     },
   ];
 
@@ -458,29 +641,44 @@ const AuthorizationPage = ({ onboarding }: Props) => {
 
   let contents = (
     <React.Fragment>
-      <H1DarkStyle>Setup</H1DarkStyle>
-      <H2DarkStyle>Connect Your Brokerage</H2DarkStyle>
-      <AuthP>
+      <H1>Connect Your Brokerage</H1>
+      <Description>
         In order to help you manage your portfolio, Passiv needs to connect to
-        your brokerage account. Connecting your account does not allow Passiv to
-        see your login information.
-      </AuthP>
-      <H2DarkStyle>Traditional</H2DarkStyle>
+        your brokerage account.
+      </Description>
+      <Note>
+        <span>Important:</span> Your login details are secure with your
+        brokerage. Connecting your account does not allow Passiv to see your
+        login information.
+      </Note>
+
+      <Brokerage>Traditional</Brokerage>
       <React.Fragment>
-        <Container2Column>
+        <Container3Column columns="1fr 1fr 1fr">
           {brokerageOptions.map((brokerage: any) => {
             let contents = null;
             if (brokerages.some((b) => b.name === brokerage.name)) {
               contents = (
-                <AuthBox
-                  key={brokerage.id}
-                  onClick={() => startConfirmConnection(brokerage.name)}
-                >
-                  <LogoContainer>
-                    <img src={brokerage.logo} alt={`${brokerage.name} Logo`} />
-                  </LogoContainer>
-                  <AuthLink>Connect {brokerage.displayName}</AuthLink>
-                </AuthBox>
+                <>
+                  {brokerage.name === 'Questrade' && (
+                    <Ribbon teamPick={false}>
+                      <FontAwesomeIcon icon={faStar} color="white" />
+                      <P>Free Elite</P>
+                    </Ribbon>
+                  )}
+                  <AuthBox
+                    key={brokerage.id}
+                    onClick={() => startConfirmConnection(brokerage.name)}
+                  >
+                    <LogoContainer>
+                      <img
+                        src={brokerage.logo}
+                        alt={`${brokerage.name} Logo`}
+                      />
+                    </LogoContainer>
+                    <AuthLink>Connect {brokerage.displayName}</AuthLink>
+                  </AuthBox>
+                </>
               );
             }
             if (brokerage.type === 'traditional') {
@@ -489,9 +687,9 @@ const AuthorizationPage = ({ onboarding }: Props) => {
               return null;
             }
           })}
-        </Container2Column>
-        <H2DarkStyle>Crypto</H2DarkStyle>
-        <Container2Column>
+        </Container3Column>
+        <Brokerage>Crypto</Brokerage>
+        <Container3Column columns="1fr 1fr 1fr">
           {brokerageOptions.map((brokerage: any) => {
             let contents = null;
             if (brokerages.some((b) => b.name === brokerage.name)) {
@@ -513,9 +711,9 @@ const AuthorizationPage = ({ onboarding }: Props) => {
               return null;
             }
           })}
-        </Container2Column>
-        <H2DarkStyle>Aggregators</H2DarkStyle>
-        <Container2Column>
+        </Container3Column>
+        <Brokerage>Aggregators</Brokerage>
+        <Container3Column columns="1fr 1fr 1fr">
           {brokerageOptions.map((brokerage: any) => {
             let contents = null;
             if (brokerages.some((b) => b.name === brokerage.name)) {
@@ -537,7 +735,7 @@ const AuthorizationPage = ({ onboarding }: Props) => {
               return null;
             }
           })}
-        </Container2Column>
+        </Container3Column>
       </React.Fragment>
     </React.Fragment>
   );
@@ -547,12 +745,11 @@ const AuthorizationPage = ({ onboarding }: Props) => {
     const options = getBrokerageOptions(confirmConnection);
     output = (
       <React.Fragment>
-        <H1DarkStyle>Setup</H1DarkStyle>
-        <H2DarkStyle>Connect {options.name}</H2DarkStyle>
-        <AuthP>
+        <Brokerage>Connect {options.name}</Brokerage>
+        <Description>
           Please read and understand the following information before connecting
           to {options.name}.
-        </AuthP>
+        </Description>
         {options.confirmPrompt}
         <LinkContainer>
           <Button
@@ -569,51 +766,58 @@ const AuthorizationPage = ({ onboarding }: Props) => {
   } else {
     if (openBrokerage === 'open') {
       output = (
-        <React.Fragment>
-          <H1DarkStyle>Setup</H1DarkStyle>
-          <H2DarkStyle>Open a brokerage account</H2DarkStyle>
-          <AuthP>
+        <ShadowBox background="var(--brand-light-green)">
+          {onboarding && <OnboardingProgress currentStep={1} />}
+          <H1>Open a brokerage account</H1>
+          <Description>
             Passiv is a service that helps you manage your portfolio in a
             brokerage account. Since Passiv is not a brokerage firm, you will
             need your own brokerage account in order to use Passiv. We partner
             with select brokerage firms in order to provide the best experience.
-          </AuthP>
+          </Description>
           <AuthP>
             Follow a link below to create a brokerage account with one of our
             partners.
           </AuthP>
-          {brokerageOptions.map((brokerage: any) => {
-            return (
-              <Brokerage>
-                <Container1Column>
-                  <OpenBox
-                    onClick={() => {
-                      window.location = brokerage.openURL;
-                    }}
-                  >
-                    <LogoContainer>
+          <BrokerageOptions columns="repeat(2, auto)">
+            {brokerageOptions.map((brokerage: any) => {
+              return (
+                <Brokerage>
+                  {brokerage.teamPick && (
+                    <Ribbon teamPick={true}>
+                      <FontAwesomeIcon icon={faStar} color="white" />
+                      <P>Team Pick</P>
+                    </Ribbon>
+                  )}
+
+                  <OpenBox>
+                    <BiggerLogoContainer>
                       <img
                         src={brokerage.logo}
                         alt={`${brokerage.name} Logo`}
                       />
-                    </LogoContainer>
-                    <AuthLink>
+                    </BiggerLogoContainer>
+                    <GrowBox>{brokerage.description}</GrowBox>
+                    <OpenAccountBtn
+                      onClick={() => {
+                        window.location = brokerage.openURL;
+                      }}
+                    >
                       Open
                       {'aeiou'.includes(brokerage.name[0].toLowerCase())}{' '}
-                      {brokerage.name} Account
-                    </AuthLink>
+                      {brokerage.displayName} Account
+                    </OpenAccountBtn>
                   </OpenBox>
-                  <GrowBox>{brokerage.description}</GrowBox>
-                </Container1Column>
-              </Brokerage>
-            );
-          })}
+                </Brokerage>
+              );
+            })}
+          </BrokerageOptions>
           <LinkContainer>
-            <Link style={aDarkStyle} to="/connect">
-              Back
-            </Link>
+            <BackBtn onClick={() => dispatch(push('/welcome'))}>
+              <FontAwesomeIcon icon={faLongArrowAltLeft} /> Go Back
+            </BackBtn>
           </LinkContainer>
-        </React.Fragment>
+        </ShadowBox>
       );
     } else {
       output = (
@@ -623,22 +827,36 @@ const AuthorizationPage = ({ onboarding }: Props) => {
             {onboarding ? (
               <LinkContainer>
                 <VerticalPadding>
-                  <Link style={aDarkStyle} to="/connect/open">
-                    I don't have a brokerage account.
-                  </Link>
+                  <Button onClick={() => dispatch(push('/connect/open'))}>
+                    I don't have a brokerage account
+                  </Button>
                 </VerticalPadding>
                 <VerticalPadding>
-                  <Link style={aDarkStyle} to="/welcome">
-                    Back
-                  </Link>
+                  <BackBtn
+                    onClick={() => dispatch(updateOnboardingStep(0, settings))}
+                  >
+                    <FontAwesomeIcon icon={faLongArrowAltLeft} /> Go Back
+                  </BackBtn>
+                  {authorized && (
+                    <NextStep>
+                      <Continue
+                        onClick={() =>
+                          dispatch(updateOnboardingStep(2, settings))
+                        }
+                      >
+                        Next Step
+                        <FontAwesomeIcon icon={faLongArrowAltRight} size="lg" />
+                      </Continue>
+                    </NextStep>
+                  )}
                 </VerticalPadding>
               </LinkContainer>
             ) : (
               <LinkContainer>
                 <VerticalPadding>
-                  <Link style={aDarkStyle} to="/settings">
-                    Back
-                  </Link>
+                  <BackBtn onClick={() => dispatch(push('/settings'))}>
+                    <FontAwesomeIcon icon={faLongArrowAltLeft} /> Go Back
+                  </BackBtn>
                 </VerticalPadding>
               </LinkContainer>
             )}
@@ -648,12 +866,13 @@ const AuthorizationPage = ({ onboarding }: Props) => {
     }
   }
 
-  return (
-    <ShadowBox background="#2a2d34">
-      {output}
-      {showProgressFeature && <OnboardingProgress step={2} />}
-    </ShadowBox>
-  );
+  if (!onboarding) {
+    return (
+      <ShadowBox background="var(--brand-light-green)">{output}</ShadowBox>
+    );
+  } else {
+    return output;
+  }
 };
 
-export default AuthorizationPage;
+export default ConnectBrokerage;

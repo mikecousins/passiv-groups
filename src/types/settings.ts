@@ -41,4 +41,5 @@ export type Settings = {
   affiliate_charity: string | null;
   is_affiliate: boolean;
   login_emails_enabled: boolean;
+  onboarding_status: number;
 };

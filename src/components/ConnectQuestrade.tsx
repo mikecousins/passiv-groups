@@ -2,7 +2,11 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectBrokerages } from '../selectors';
 import ShadowBox from '../styled/ShadowBox';
-import { H1DarkStyle, H2DarkStyle, PDarkStyle } from '../styled/Setup';
+import {
+  H1DarkStyle,
+  H2DarkStyle,
+  PDarkStyle,
+} from '../pages/AuthorizationPage';
 import { HideButton } from './ContextualMessageWrapper';
 import AuthorizationPicker from './AuthorizationPicker';
 import { H3 } from '../styled/GlobalElements';
@@ -83,7 +87,7 @@ const ConnectQuestrade = () => {
           name="Connect"
           align="left"
         />
-        <HideButton name={'connect_questrade'} />
+        <HideButton name={'connect_questrade'} xButton={false} />
       </ShadowBox>
     </React.Fragment>
   );

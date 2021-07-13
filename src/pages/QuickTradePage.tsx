@@ -9,7 +9,7 @@ import AlpacaLogo from '../assets/images/alpaca-logo.png';
 import InteractiveBrokersLogo from '../assets/images/ibkr-logo.png';
 import TDAmeritradeLogo from '../assets/images/tda-logo.png';
 import Grid from '../styled/Grid';
-import { LogoContainer } from '../styled/Setup';
+import { LogoContainer } from '../pages/AuthorizationPage';
 import styled from '@emotion/styled';
 import { faAngleLeft, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

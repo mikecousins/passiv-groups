@@ -163,25 +163,25 @@ const TradesExplanation = ({
 
   const toggle = (
     <TopStyle>
-      {
-        <ToggleBox>
-          {trades && trades.length === 0 && <HideButton name={'no_trades'} />}
-          <A onClick={() => toggleShowExplanation()}>
-            {showExplanation ? (
-              <span>
-                Hide Explanation <FontAwesomeIcon icon={faCaretUp} />
-              </span>
-            ) : (
-              <span>
-                Show Explanation <FontAwesomeIcon icon={faCaretDown} />
-              </span>
-            )}
-          </A>
-          {container && showExplanation && (
-            <ExplanationBox>{content}</ExplanationBox>
+      {trades && trades.length === 0 && (
+        <HideButton name={'no_trades'} xButton={false} />
+      )}
+      <ToggleBox>
+        <A onClick={() => toggleShowExplanation()}>
+          {showExplanation ? (
+            <span>
+              Hide Explanation <FontAwesomeIcon icon={faCaretUp} />
+            </span>
+          ) : (
+            <span>
+              Show Explanation <FontAwesomeIcon icon={faCaretDown} />
+            </span>
           )}
-        </ToggleBox>
-      }
+        </A>
+        {container && showExplanation && (
+          <ExplanationBox>{content}</ExplanationBox>
+        )}
+      </ToggleBox>
     </TopStyle>
   );
 

@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import {
   faExclamationTriangle,
@@ -6,7 +7,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Dialog from '@reach/dialog';
 import { Location } from 'history';
-import React, { useEffect, useState } from 'react';
 import { Prompt } from 'react-router-dom';
 import { Button } from '../styled/Button';
 import { H1 } from '../styled/GlobalElements';

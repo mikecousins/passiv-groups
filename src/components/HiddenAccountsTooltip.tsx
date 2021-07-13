@@ -8,7 +8,7 @@ import Tooltip from './Tooltip';
 const HiddenAccountsTooltip = () => {
   const hiddenAccounts = useSelector(selectHiddenAccounts);
   return (
-    <>
+    <span style={{ marginLeft: '5px' }}>
       {hiddenAccounts.length >= 1 && (
         <Tooltip
           label={
@@ -18,7 +18,7 @@ const HiddenAccountsTooltip = () => {
           <FontAwesomeIcon icon={faInfoCircle} style={{ fontSize: '15px' }} />
         </Tooltip>
       )}
-    </>
+    </span>
   );
 };
 
