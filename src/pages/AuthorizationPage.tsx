@@ -26,6 +26,7 @@ import BitbuyLogo from '../assets/images/bitbuy-logo.png';
 import UnocoinLogo from '../assets/images/unocoin-logo.png';
 import WealthicaLogo from '../assets/images/wealthica-logo.png';
 import ZerodhaLogo from '../assets/images/zerodha-logo.png';
+import YodleeLogo from '../assets/images/yodlee-logo.png';
 import { Brokerage as BrokerageType } from '../types/brokerage';
 import { toast } from 'react-toastify';
 import { Button } from '../styled/Button';
@@ -449,6 +450,25 @@ const AuthorizationPage = ({ onboarding }: Props) => {
       logo: BitbuyLogo,
       description: <P>Bitbuy is a Canadian cryptocurrency exchange.</P>,
       type: 'crypto',
+    },
+    {
+      id: 'yodlee',
+      name: 'Yodlee',
+      displayName: 'Yodlee',
+      connect: () => {
+        startConnection('Yodlee', 'read');
+      },
+      confirmPrompt: null,
+      defaultConnectionType: 'read',
+      openURL: '',
+      major: true,
+      logo: YodleeLogo,
+      description: (
+        <P>
+          Yodlee is a financial data aggregation service built by Envestnet.
+        </P>
+      ),
+      type: 'aggregator',
     },
   ];
 
